@@ -4,11 +4,7 @@
 #include <unordered_map> 
 #include "unitval.hpp"
 
-  using namespace std;
-
-      // enum Pool {
-      //   SOIL, ATMOSPHERE, OCEAN
-      // };
+using namespace std;
 
   /**
    * \brief CarbonTracker Class: class to track origin of carbon in various carbon pools as it moves throughout the carbon cycle
@@ -18,6 +14,7 @@
    */
   class CarbonTracker{
 
+    private:
       // Total amount of carbon in a pool represented by a CarbonTracker object - in petagrams carbon (U-PGC)
       Hector::unitval totalCarbon;
 
@@ -26,9 +23,17 @@
       unordered_map<CarbonTracker::MultiKey, double>  origin_fracs; 
 
       // boolean to signify if tracker should be tracking carbon movement
-      bool track;
-    
-    private:
+      static bool track;
+
+    public:
+
+    // types of sub-pools of carbon within Hector - type of key1 in the MultiKey class
+      static enum Pool {
+        SOIL, ATMOSPHERE, OCEAN
+      };
+
+      const static NUM_POOLS = 3;
+
       /**
        * \brief MultiKey Class: custom key class for map in CarbonTracker class
        * 
@@ -37,20 +42,16 @@
        */
       class MultiKey{
         public:
-          String poolName;
-          MutliKey(String key1);
+          Pool key1;
 
+          MutliKey(Pool key1);
           // std::maps require an operator<() fuction in order to function properly
           bool operator<(const MutliKey& right) const;
       };
 
-
-
-    public:
-
       CarbonTracker() = delete;
-      ~CarbonTracker();
-      CarbonTracker (const CarbonTracker& ct);
+      //~CarbonTracker();
+      //CarbonTracker (const CarbonTracker& ct);
 
       /**
        *\brief parameterized constructor - useful for initializing pools of carbon with only pg carbon (unitvals)
@@ -59,16 +60,16 @@
       *\param track boolean that represents if the carbonTracker object should start tracking origins
       * \return CarbonTracker object with totalCarbon set and a map with one key-value pair (key, 1) as all carbon is from inital source
       */
-      CarbonTracker(Hector::unitval totalCarbon, MultiKey key, bool track = false);
+      CarbonTracker(Hector::unitval totalCarbon, MultiKey key);
 
       /**
-       *\brief parameterized constructor - can set sub-pools of carbon, probably only usful for specialized experiments 
-      *\param origin_val map with specific key-value pairs representing the origin and precent of the total carbon in each sub-pool
+      *\brief parameterized constructor - useful for initializing fluxes with predetermined maps
       *\param totalCarbon unitval (units pg C) that expresses total amount of carbon in the pool
+      *\param origin_frax map object - usually the map of the pool the flux is leaving
       *\param track boolean that represents if the carbonTracker object should start tracking origins
-      *\return CarbonTracker object with set totalCarbon and custom map input
+      * \return CarbonTracker object with totalCarbon set and a map with one key-value pair (key, 1) as all carbon is from inital source
       */
-      CarbonTracker(unordered_map<MultiKey, double> origin_val, Hector::unitval totalCarbon, bool track = true);
+      CarbonTracker(Hector::unitval totalCarbon, unordered_map<MultiKey, double> origin_fracs);
 
       /**
        * \brief addition between two carbon tracker objects - if 'this' is carbon tracking, then total carbon is the sum
@@ -118,7 +119,6 @@
        * \param d double (usually a fractional value to get sub-section of pool)
        * \param ct CarbonTracker object with unitval (pg C) total carbon and valid map
        * \return CarbonTracker object with (ct totalCarbon)/d and unchanged map 
-       * UNSURE IF THIS IS USED EITHER
        */ 
       CarbonTracker operator/(CarbonTracker&, const double);
 
@@ -153,18 +153,21 @@
        */ 
       Hector::unitval getOriginCarbon(MultiKey origin);
 
-      /**
+  
+      static void startTracking();
+  };
+
+  /**
        * \brief converts a unitval to a CarbonTracker object so that it can be added to a sub-pool of a CarbonTracker object
        * \param flux unitval with units (pg C)
-       * \param key sub-pool into which the carbon flux will be distributed
-       * \return CarbonTracker object with total carbon set to flux and a map with one key-value pair (key, 1)
+       * \param origin_frac Map of carbon-pool from which the flux is coming from
+       * \return CarbonTracker object with total carbon set to flux and a map that is the same as the pool the carbon is coming from
        */ 
-      CarbonTracker fluxToTracker(const Hector::unitval flux, MultiKey key);
 
       /**
        * \brief starts tracking and makes CarbonTracker param track = true
        */ 
-      void startTracking();
-  };
+  CarbonTracker fluxToTracker(const Hector::unitval flux, unordered_map<MultiKey, double> origin_fracs);
+
   ostream& operator<<(ostream &out, const CarbonTracker &x );
 #endif
