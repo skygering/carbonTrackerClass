@@ -5,12 +5,12 @@
 
 using namespace std;
 
-CarbonTracker::MultiKey::MutliKey(Pool poolName){
+CarbonTracker::MultiKey::MultiKey(Pool poolName){
     key1 = poolName;
 }
 
-bool MultiKey::operator<(const MutliKey& right) const{
-    return (this.key1 < right.key1);
+bool CarbonTracker::MultiKey::operator<(const MultiKey& right) const{
+    return (this->key1 < right.key1);
 }
 
 // CarbonTracker::~CarbonTracker(){
@@ -18,38 +18,41 @@ bool MultiKey::operator<(const MutliKey& right) const{
 // }
 // CarbonTracker::CarbonTracker (const CarbonTracker& ct);
 
-CarbonTracker::CarbonTracker(Hector::unitval totalCarbon, MultiKey key)
-              :totalCarbon_{totalCarbon}, track_{track}{
-                unordered_map<CarbonTracker::MultiKey, double> carbonMap({{key,1}});
-                origin_fracs = carbonMap;
-              }
+CarbonTracker(Hector::unitval totCarbon, MultiKey key){
+    totalCarbon = totCarbon;
+    unordered_map<CarbonTracker::MultiKey, double> carbonMap({{key,1}});
+    origin_fracs = carbonMap;
+}
 
-CarbonTracker::CarbonTracker(Hector::unitval totalCarbon, unordered_map<MultiKey, double> origin_fracs)
-              :totalCarbon_{totalCarbon},  origin_fracs_{origin_frac}, track_{track}{}
+CarbonTracker(Hector::unitval totCarbon, unordered_map<CarbonTracker::MultiKey, double> carbonMap){
+    totalCarbon = totCarbon;
+    origin_fracs = carbonMap;
+}
 
 
 CarbonTracker CarbonTracker::operator+(const CarbonTracker& flux){
-    return this;
+    return flux;
 }
 
 CarbonTracker CarbonTracker::operator-(const CarbonTracker& flux){
-     return this;
+    return flux;
  }
 
  CarbonTracker CarbonTracker::operator-(const Hector::unitval flux){
-     return this;
+    CarbonTracker ct(this->totalCarbon, this->origin_fracs);
+    return ct;
  }
 
- CarbonTracker CarbonTracker::operator*(const double d, CarbonTracker& ct){
+ CarbonTracker operator*(const double d, CarbonTracker& ct){
      return ct;
  }
 
- CarbonTracker CarbonTracker::operator*(const CarbonTracker& ct, double d){
-     return this;
+ CarbonTracker operator*(const CarbonTracker& ct, double d){
+     return ct;
  }
 
- CarbonTracker CarbonTracker::operator/(CarbonTracker&, const double){
-     return this;
+ CarbonTracker operator/(CarbonTracker& ct, const double){
+     return ct;
  }
 
  void CarbonTracker::setTotalCarbon(Hector::unitval tCarbon){
@@ -64,19 +67,22 @@ CarbonTracker CarbonTracker::operator-(const CarbonTracker& flux){
      return this->totalCarbon;
  }
 
- unordered_map<MultiKey, double> CarbonTracker::getCarbonMap(){
+ unordered_map<CarbonTracker::MultiKey, double> CarbonTracker::getCarbonMap(){
      return this->origin_fracs;
  }
 
 Hector::unitval CarbonTracker::getOriginCarbon(MultiKey origin){
-    return this->origin_fracs.find(origin);
+    Hector::unitval flux;
+    return flux;
 }
 
-CarbonTracker CarbonTracker::fluxToTracker(const Hector::unitval flux, unordered_map<MultiKey, double> origin_fracs){
-    return CarbonTracker::CarbonTracker(flux, origin_fracs);
+CarbonTracker fluxToTracker(const Hector::unitval flux, unordered_map<CarbonTracker::MultiKey, double> origin_fracs){
+    CarbonTracker ct(flux, origin_fracs);
+    return ct;
+
 }
 
-static void CarbonTracker::startTracking(){
+void CarbonTracker::startTracking(){
     track = true;
 }
 

@@ -13,6 +13,28 @@ using namespace std;
    * Designed so that it can be dropped in place of a unitval in the Hector C++ code base
    */
   class CarbonTracker{
+    public:
+    // types of sub-pools of carbon within Hector - type of key1 in the MultiKey class
+      enum Pool {
+        SOIL, ATMOSPHERE, OCEAN
+      };
+
+      const static int NUM_POOLS = 3;
+
+      /**
+       * \brief MultiKey Class: custom key class for map in CarbonTracker class
+       * 
+       * Needs ability to hold multiple keys to further specify types of origin carbon
+       * (i.e. soil and carbon 14 - ability to add isotopes and other modifiers in the future)
+       */
+      class MultiKey{
+        public:
+          Pool key1;
+
+          MultiKey(Pool key1);
+          // a map requires an operator<() fuction in order to function properly
+          bool operator<(const MultiKey& right) const;
+      };
 
     private:
       // Total amount of carbon in a pool represented by a CarbonTracker object - in petagrams carbon (U-PGC)
@@ -26,30 +48,6 @@ using namespace std;
       static bool track;
 
     public:
-
-    // types of sub-pools of carbon within Hector - type of key1 in the MultiKey class
-      static enum Pool {
-        SOIL, ATMOSPHERE, OCEAN
-      };
-
-      const static NUM_POOLS = 3;
-
-      /**
-       * \brief MultiKey Class: custom key class for map in CarbonTracker class
-       * 
-       * Needs ability to hold multiple keys to further specify types of origin carbon
-       * (i.e. soil and carbon 14 - ability to add isotopes and other modifiers in the future)
-       */
-      class MultiKey{
-        public:
-          Pool key1;
-
-          MutliKey(Pool key1);
-          // std::maps require an operator<() fuction in order to function properly
-          bool operator<(const MutliKey& right) const;
-      };
-
-      CarbonTracker() = delete;
       //~CarbonTracker();
       //CarbonTracker (const CarbonTracker& ct);
 
@@ -57,7 +55,6 @@ using namespace std;
        *\brief parameterized constructor - useful for initializing pools of carbon with only pg carbon (unitvals)
       *\param totalCarbon unitval (units pg C) that expresses total amount of carbon in the pool
       *\param key MultiKey object to set as inital origin of carbon in the pool at time of creation
-      *\param track boolean that represents if the carbonTracker object should start tracking origins
       * \return CarbonTracker object with totalCarbon set and a map with one key-value pair (key, 1) as all carbon is from inital source
       */
       CarbonTracker(Hector::unitval totalCarbon, MultiKey key);
@@ -66,7 +63,6 @@ using namespace std;
       *\brief parameterized constructor - useful for initializing fluxes with predetermined maps
       *\param totalCarbon unitval (units pg C) that expresses total amount of carbon in the pool
       *\param origin_frax map object - usually the map of the pool the flux is leaving
-      *\param track boolean that represents if the carbonTracker object should start tracking origins
       * \return CarbonTracker object with totalCarbon set and a map with one key-value pair (key, 1) as all carbon is from inital source
       */
       CarbonTracker(Hector::unitval totalCarbon, unordered_map<MultiKey, double> origin_fracs);
@@ -95,32 +91,6 @@ using namespace std;
        * \return CarbonTracker object with decreased total carbon and unchanged map from 'this'
        */ 
       CarbonTracker operator-(const Hector::unitval flux);
-
-      /**
-       * \brief multiplication between double and CarbonTracker object - usually used to get fraction of a pool
-       * \param d double (usually a fractional value to get sub-section of pool)
-       * \param ct CarbonTracker object with unitval (pg C) total carbon and valid map
-       * \return CarbonTracker object with d*(ct totalCarbon) and unchanged map 
-       */ 
-      CarbonTracker operator*(const double d, CarbonTracker& ct);
-
-      /**
-       * \brief multiplication between CarbonTracker object and double - usually used to get fraction of a pool
-       * opposite order of paramters from above
-       * \param d double (usually a fractional value to get sub-section of pool)
-       * \param ct CarbonTracker object with unitval (pg C) total carbon and valid map
-       * \return CarbonTracker object with d*(ct totalCarbon) and unchanged map 
-       */ 
-      CarbonTracker operator*(const CarbonTracker& ct, double d);
-
-      /**
-       * \brief divison of a CarbonTracker object by a double - usually used to get fraction of a pool
-       * opposite order of paramters from above - implemnted to make sure unitval operations are still allowed
-       * \param d double (usually a fractional value to get sub-section of pool)
-       * \param ct CarbonTracker object with unitval (pg C) total carbon and valid map
-       * \return CarbonTracker object with (ct totalCarbon)/d and unchanged map 
-       */ 
-      CarbonTracker operator/(CarbonTracker&, const double);
 
       /**
        * \brief setter for total carbon within CarbonTracker object
@@ -167,7 +137,34 @@ using namespace std;
       /**
        * \brief starts tracking and makes CarbonTracker param track = true
        */ 
-  CarbonTracker fluxToTracker(const Hector::unitval flux, unordered_map<MultiKey, double> origin_fracs);
+  CarbonTracker fluxToTracker(const Hector::unitval flux, unordered_map<CarbonTracker::MultiKey, double> origin_fracs);
+
+   /**
+       * \brief multiplication between double and CarbonTracker object - usually used to get fraction of a pool
+       * \param d double (usually a fractional value to get sub-section of pool)
+       * \param ct CarbonTracker object with unitval (pg C) total carbon and valid map
+       * \return CarbonTracker object with d*(ct totalCarbon) and unchanged map 
+       */ 
+  CarbonTracker operator*(const double d, CarbonTracker& ct);
+
+      /**
+       * \brief multiplication between CarbonTracker object and double - usually used 
+       * opposite order of paramters from above
+       * \param d double (usually a fractional value to get sub-section of pool)
+       * \param ct CarbonTracker object with unitval (pg C) total carbon and valid map
+       * \return CarbonTracker object with d*(ct totalCarbon) and unchanged map 
+       */ 
+      CarbonTracker operator*(const CarbonTracker& ct, double d);
+
+      /**
+       * \brief divison of a CarbonTracker object by a double - usually used to get fraction of a pool
+       * opposite order of paramters from above - implemnted to make sure unitval operations are still allowed
+       * \param d double (usually a fractional value to get sub-section of pool)
+       * \param ct CarbonTracker object with unitval (pg C) total carbon and valid map
+       * \return CarbonTracker object with (ct totalCarbon)/d and unchanged map 
+       */ 
+      CarbonTracker operator/(CarbonTracker&, const double);
+
 
   ostream& operator<<(ostream &out, const CarbonTracker &x );
 #endif
