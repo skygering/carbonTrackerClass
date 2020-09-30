@@ -2,6 +2,7 @@
 #include <sstream>
 #include <unordered_map> 
 #include "carbonTracker.hpp"
+#include "unitval.hpp"
 
 using namespace std;
 
@@ -13,20 +14,16 @@ bool CarbonTracker::MultiKey::operator<(const MultiKey& right) const{
     return (this->key1 < right.key1);
 }
 
-// CarbonTracker::~CarbonTracker(){
 
-// }
-// CarbonTracker::CarbonTracker (const CarbonTracker& ct);
-
-CarbonTracker(Hector::unitval totCarbon, MultiKey key){
-    totalCarbon = totCarbon;
-    unordered_map<CarbonTracker::MultiKey, double> carbonMap({{key,1}});
-    origin_fracs = carbonMap;
+CarbonTracker::CarbonTracker(Hector::unitval totC, MultiKey key){
+    totalCarbon = totC;
+    unordered_map<CarbonTracker::MultiKey, double> subPool;
+    subPool[key] = 1;
+    origin_fracs = subPool;
 }
 
-CarbonTracker(Hector::unitval totCarbon, unordered_map<CarbonTracker::MultiKey, double> carbonMap){
-    totalCarbon = totCarbon;
-    origin_fracs = carbonMap;
+CarbonTracker::CarbonTracker(Hector::unitval totC, unordered_map<MultiKey, double> pool_map){
+
 }
 
 

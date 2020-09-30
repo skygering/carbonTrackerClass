@@ -48,24 +48,22 @@ using namespace std;
       static bool track;
 
     public:
-      //~CarbonTracker();
-      //CarbonTracker (const CarbonTracker& ct);
 
-      /**
-       *\brief parameterized constructor - useful for initializing pools of carbon with only pg carbon (unitvals)
+    /**
+      *\brief parameterized constructor - useful for initializing pools of carbon with only pg carbon (unitvals)
       *\param totalCarbon unitval (units pg C) that expresses total amount of carbon in the pool
       *\param key MultiKey object to set as inital origin of carbon in the pool at time of creation
       * \return CarbonTracker object with totalCarbon set and a map with one key-value pair (key, 1) as all carbon is from inital source
       */
-      CarbonTracker(Hector::unitval totalCarbon, MultiKey key);
+      CarbonTracker(Hector::unitval totC, MultiKey key);
 
-      /**
+    /**
       *\brief parameterized constructor - useful for initializing fluxes with predetermined maps
       *\param totalCarbon unitval (units pg C) that expresses total amount of carbon in the pool
       *\param origin_frax map object - usually the map of the pool the flux is leaving
       * \return CarbonTracker object with totalCarbon set and a map with one key-value pair (key, 1) as all carbon is from inital source
       */
-      CarbonTracker(Hector::unitval totalCarbon, unordered_map<MultiKey, double> origin_fracs);
+      CarbonTracker(Hector::unitval totC, unordered_map<MultiKey, double> pool_map);
 
       /**
        * \brief addition between two carbon tracker objects - if 'this' is carbon tracking, then total carbon is the sum
