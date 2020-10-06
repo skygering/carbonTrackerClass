@@ -18,6 +18,7 @@
                 "reveal": "always",
                 "panel": "shared"
             },
+
             "problemMatcher": {
                 "owner": "cpp",
                 "fileLocation": [
@@ -31,7 +32,8 @@
                     "column": 3,
                     "severity": 4,
                     "message": 5
-                }
+                },
+                
             }
         }
     ]
