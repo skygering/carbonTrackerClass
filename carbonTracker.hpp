@@ -111,7 +111,9 @@ using namespace std;
     /**
       * \brief starts tracking and makes CarbonTracker param track = true
       */ 
-    static void startTracking();
+    static void startTracking(){
+        track = true;
+    }
   };
 
   /**

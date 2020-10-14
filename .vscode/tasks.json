@@ -4,11 +4,13 @@
     "tasks": [
         {
             "label": "build",
-            "command": "clang++",
+            "command": "g++",
             "args": [
                 "-o",
                 "carbonTracker", // executable
-                "carbonTracker.cpp", // main file
+                "main.cpp",
+                "carbonTracker.cpp",
+                "unitval.cpp",
                 "-g",
                 "-v"
             ],

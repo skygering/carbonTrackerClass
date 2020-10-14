@@ -1,14 +1,25 @@
 #include "carbonTracker.hpp"
-#include <gtest/gtest.h>
+using namespace std;
 
-TEST(ExampleTest, AddTest)
-{
-    EXPECT_EQ(false, false);
+bool testConstructor(){
+    Hector::unitval carbon(10, Hector::U_PGC);
+    CarbonTracker soil(carbon, CarbonTracker::SOIL);
+    double* arr = soil.getOriginFracs();
+    bool correctArray = true;
+    for(int i = 0; i< CarbonTracker::LAST; ++i){
+        if(arr[i] != 0 && i != CarbonTracker::SOIL){
+            correctArray = false;
+        }
+        if(i==CarbonTracker::SOIL && arr[i] != 1){
+            correctArray = false;
+        }
+    }
+    return (soil.getTotalCarbon() == 10) && correctArray;
 }
 
+
 int main(int argc, char* argv[]){
-    std::cout << "hello world!" << std::endl;
-    InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    cout << "Time for Tests!" << endl;
+    cout << testConstructor() << endl;
 }
 

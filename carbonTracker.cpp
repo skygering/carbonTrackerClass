@@ -79,10 +79,6 @@ CarbonTracker fluxToTracker(const Hector::unitval flux, double* origin_fracs){
 
 }
 
-//void CarbonTracker::startTracking(){
-//  track = true;
-//}
-
 
 ostream& operator<<(ostream &out, const CarbonTracker &x ){
     out << "hi";
