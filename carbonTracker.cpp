@@ -7,6 +7,7 @@
 using namespace std;
 
 CarbonTracker::CarbonTracker(Hector::unitval totC, Pool subPool){
+    H_ASSERT(totC.units() != Hector::U_PGC, "Wrong Units. Carbin tracker only accepts U_PGC");
     this->totalCarbon = totC;
     for(int i = 0; i< LAST; ++i){
         if(i == subPool){
