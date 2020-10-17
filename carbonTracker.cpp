@@ -7,6 +7,7 @@
 using namespace std;
 
 CarbonTracker::CarbonTracker(Hector::unitval totC, Pool subPool){
+    H_ASSERT(subPool != CarbonTracker::LAST, "LAST is not a sub-pool of carbon, it is just a marker for the end of the enum")
     H_ASSERT(totC.units() == Hector::U_PGC, "Wrong Units. Carbin tracker only accepts U_PGC");
     this->totalCarbon = totC;
     for(int i = 0; i< LAST; ++i){
@@ -63,36 +64,53 @@ CarbonTracker CarbonTracker::operator+(const CarbonTracker& flux){
 }
 
 CarbonTracker CarbonTracker::operator-(const CarbonTracker& flux){
-    return flux;
+    Hector::unitval totC = this->totalCarbon - flux.totalCarbon;
+    double newOrigins[CarbonTracker::LAST];
+    for(int i = 0; i < CarbonTracker::LAST; ++i){
+        Hector::unitval poolCarbon = this->totalCarbon * this->originFracs[i] - flux.totalCarbon * flux.originFracs[i];
+        H_ASSERT(poolCarbon >= 0, "Pool doesn't have enough carbon to subtract the whole flux - no negative carbon allowed");
+        newOrigins[i] = poolCarbon / totC;
+    }
+    CarbonTracker subtractFlux(totC, newOrigins);
+    return subtractFlux;
  }
 
  CarbonTracker CarbonTracker::operator-(const Hector::unitval flux){
+    H_ASSERT(flux.units() == Hector::U_PGC, "Only carbon can be used in carbon tracker!")
     H_ASSERT(this->totalCarbon > flux, "You cannot remove that much carbon, flux is larger than total carbon");
     CarbonTracker ct(this->totalCarbon - flux, this->originFracs);
     return ct;
  }
 
  CarbonTracker operator*(const double d, CarbonTracker& ct){
-     return ct;
+    CarbonTracker multipliedCT(ct);
+    multipliedCT.setTotalCarbon(multipliedCT.getTotalCarbon() * d);
+    return multipliedCT;
  }
 
- CarbonTracker operator*(const CarbonTracker& ct, double d){
-     return ct;
+ CarbonTracker operator*(const CarbonTracker& ct, const double d){
+    CarbonTracker multipliedCT(ct);
+    multipliedCT.setTotalCarbon(multipliedCT.getTotalCarbon() * d);
+    return multipliedCT;
  }
 
- CarbonTracker operator/(CarbonTracker& ct, const double){
-     return ct;
+ CarbonTracker operator/(CarbonTracker& ct, const double d){
+    H_ASSERT(d != 0, "No dividing by 0!");
+    CarbonTracker multipliedCT(ct);
+    multipliedCT.setTotalCarbon(multipliedCT.getTotalCarbon() / d);
+    return multipliedCT;
  }
 
  void CarbonTracker::setTotalCarbon(Hector::unitval tCarbon){
-     this->totalCarbon = tCarbon;
+    H_ASSERT(tCarbon.units() == Hector::U_PGC, "Carbon Tracker only accepts unitvals with units U_PGC");
+    this->totalCarbon = tCarbon;
  }
 
- void CarbonTracker::setOriginFracs(double* poolFracs){
-     for(int i = 0; i< LAST; ++i){
-        this->originFracs[i] = *(poolFracs + i);
-    }
- }
+//  void CarbonTracker::setOriginFracs(double* poolFracs){
+//      for(int i = 0; i< LAST; ++i){
+//         this->originFracs[i] = *(poolFracs + i);
+//     }
+//  }
 
  Hector::unitval CarbonTracker::getTotalCarbon(){
      return this->totalCarbon;
@@ -102,11 +120,14 @@ CarbonTracker CarbonTracker::operator-(const CarbonTracker& flux){
      return this->originFracs;
  }
 
-Hector::unitval CarbonTracker::getOriginCarbon(Pool subPool){
+Hector::unitval CarbonTracker::getPoolCarbon(Pool subPool){
+    H_ASSERT(subPool != CarbonTracker::LAST, "LAST is not a sub-pool of carbon, it is just a marker for the end of the enum");
     return this->originFracs[subPool] * this-> totalCarbon;
 }
 
 CarbonTracker fluxToTracker(const Hector::unitval flux, CarbonTracker origin){
+    H_ASSERT(flux.units() == Hector::U_PGC, "Flux must be in units U_PGC for carbon tracker");
+    H_ASSERT(origin.getTotalCarbon() >= flux, "You don't have enough carbon in the pool to take a flux of that size")
     CarbonTracker ct(origin);
     ct.setTotalCarbon(flux);
     return ct;

@@ -88,11 +88,11 @@ using namespace std;
       */ 
     void setTotalCarbon(Hector::unitval totalCarbon);
 
-    /**
-      * \brief setter for map object within CarbonTracker object
-      * \param origin_frac map with MultiKeys key and double values
-      */ 
-    void setOriginFracs(double* origin_frac);
+    // /**
+    //   * \brief setter for map object within CarbonTracker object
+    //   * \param origin_frac map with MultiKeys key and double values
+    //   */ 
+    // void setOriginFracs(double* origin_frac);
 
     /**
       * \brief getter for CarbonTracker total carbon
@@ -111,7 +111,7 @@ using namespace std;
       * \param MultiKey object
       * \return value associated with key param, if no key matches returns 0
       */ 
-    Hector::unitval getOriginCarbon(Pool origin);
+    Hector::unitval getPoolCarbon(Pool origin);
 
     /**
       * \brief starts tracking and makes CarbonTracker param track = true
@@ -128,6 +128,8 @@ using namespace std;
     * \return CarbonTracker object with total carbon set to flux and a map that is the same as the pool the carbon is coming from
     */ 
   CarbonTracker fluxToTracker(const Hector::unitval flux, CarbonTracker origin);
+
+  //MIGHT WANT TO ADD ONE WHERE YOU CAN SET THE AMOUNT YOU TAKE FROM EACH?? INSTEAD OF IT COMING FROM EXACT SAME ARRAY AS ORIGIN
 
   /**
     * \brief multiplication between double and CarbonTracker object - usually used to get fraction of a pool
