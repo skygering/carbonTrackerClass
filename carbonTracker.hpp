@@ -33,6 +33,14 @@ using namespace std;
     // boolean to signify if tracker should be tracking carbon movement
     static bool track;
 
+    /**
+      *\brief parameterized constructor - useful for initializing fluxes with predetermined maps
+      *\param totalCarbon unitval (units pg C) that expresses total amount of carbon in the pool
+      *\param origin_frax pointer to a double array - usually the originFracs array of the pool the flux is leaving
+      * \return CarbonTracker object with totalCarbon set and an array set equal to the pointer object
+      */
+    CarbonTracker(Hector::unitval totC, double* pool_map);
+
    public:
 
     /**
@@ -44,13 +52,10 @@ using namespace std;
       */
     CarbonTracker(Hector::unitval totC, Pool subPool);
 
-    /**
-      *\brief parameterized constructor - useful for initializing fluxes with predetermined maps
-      *\param totalCarbon unitval (units pg C) that expresses total amount of carbon in the pool
-      *\param origin_frax pointer to a double array - usually the originFracs array of the pool the flux is leaving
-      * \return CarbonTracker object with totalCarbon set and an array set equal to the pointer object
-      */
-    CarbonTracker(Hector::unitval totC, double* pool_map);
+    // ~CarbonTracker(); DO I NEED THIS??
+    CarbonTracker(const CarbonTracker &ct);
+    CarbonTracker& operator=(CarbonTracker ct);
+
 
     /**
       * \brief addition between two carbon tracker objects - if 'this' is carbon tracking, then total carbon is the sum
@@ -61,13 +66,13 @@ using namespace std;
     CarbonTracker operator+(const CarbonTracker& flux);
 
 
-    /**
-      * \brief subtraction between two CarbonTracker objects - if 'this' is ctracking, total carbon will be reduced and the map
-      * will be updated to new proportions 
-      * \param flux carbon tracker object that is being subtracted from 'this', needs total carbon unitval (unit pg C) and valid map
-      * \return CarbonTracker object with decreased total carbon and upated map
-      */ 
-    CarbonTracker operator-(const CarbonTracker& flux);
+    // /**
+    //   * \brief subtraction between two CarbonTracker objects - if 'this' is ctracking, total carbon will be reduced and the map
+    //   * will be updated to new proportions 
+    //   * \param flux carbon tracker object that is being subtracted from 'this', needs total carbon unitval (unit pg C) and valid map
+    //   * \return CarbonTracker object with decreased total carbon and upated map
+    //   */ 
+    // CarbonTracker operator-(const CarbonTracker& flux);
 
     /**
       * \brief subtraction between CarbonTracker object and a unitval - decreases total carbon and leaves map the same -
@@ -119,10 +124,10 @@ using namespace std;
   /**
     * \brief converts a unitval to a CarbonTracker object so that it can be added to a sub-pool of a CarbonTracker object
     * \param flux unitval with units (pg C)
-    * \param origin_frac Array of carbon-pool from which the flux is coming from
+    * \param origin Array of carbon-pool from which the flux is coming from
     * \return CarbonTracker object with total carbon set to flux and a map that is the same as the pool the carbon is coming from
     */ 
-  CarbonTracker fluxToTracker(const Hector::unitval flux, double* origin_fracs);
+  CarbonTracker fluxToTracker(const Hector::unitval flux, CarbonTracker origin);
 
   /**
     * \brief multiplication between double and CarbonTracker object - usually used to get fraction of a pool
