@@ -35,6 +35,7 @@ CarbonTracker::CarbonTracker(Hector::unitval totC, double* poolFracs){
 //     delete[] originFracs;
 //     //delete totalCarbon; Does this not work bc unitval doesn't have a constructor? Do I need this?
 // }
+
 CarbonTracker::CarbonTracker(const CarbonTracker &ct){
     this->totalCarbon = ct.totalCarbon;
     for(int i = 0; i < CarbonTracker::Pool::LAST; ++i){
@@ -61,12 +62,13 @@ CarbonTracker CarbonTracker::operator+(const CarbonTracker& flux){
     return addedFlux;
 }
 
-// CarbonTracker CarbonTracker::operator-(const CarbonTracker& flux){
-//     return flux;
-//  }
+CarbonTracker CarbonTracker::operator-(const CarbonTracker& flux){
+    return flux;
+ }
 
  CarbonTracker CarbonTracker::operator-(const Hector::unitval flux){
-    CarbonTracker ct(this->totalCarbon, CarbonTracker::SOIL);
+    H_ASSERT(this->totalCarbon > flux, "You cannot remove that much carbon, flux is larger than total carbon");
+    CarbonTracker ct(this->totalCarbon - flux, this->originFracs);
     return ct;
  }
 

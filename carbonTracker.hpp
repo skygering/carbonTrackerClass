@@ -66,13 +66,13 @@ using namespace std;
     CarbonTracker operator+(const CarbonTracker& flux);
 
 
-    // /**
-    //   * \brief subtraction between two CarbonTracker objects - if 'this' is ctracking, total carbon will be reduced and the map
-    //   * will be updated to new proportions 
-    //   * \param flux carbon tracker object that is being subtracted from 'this', needs total carbon unitval (unit pg C) and valid map
-    //   * \return CarbonTracker object with decreased total carbon and upated map
-    //   */ 
-    // CarbonTracker operator-(const CarbonTracker& flux);
+    /**
+      * \brief subtraction between two CarbonTracker objects - if 'this' is ctracking, total carbon will be reduced and the map
+      * will be updated to new proportions 
+      * \param flux carbon tracker object that is being subtracted from 'this', needs total carbon unitval (unit pg C) and valid map
+      * \return CarbonTracker object with decreased total carbon and upated map
+      */ 
+    CarbonTracker operator-(const CarbonTracker& flux);
 
     /**
       * \brief subtraction between CarbonTracker object and a unitval - decreases total carbon and leaves map the same -

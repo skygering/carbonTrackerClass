@@ -81,6 +81,30 @@ void testAddOperator(){
     H_ASSERT(sameCTArrays(ct3.getOriginFracs(), arr), "Arrays don't add right");
 }
 
+void testSubtractOperator(){
+    Hector::unitval carbon1(30, Hector::U_PGC);
+    CarbonTracker ct1(carbon1, CarbonTracker::SOIL);
+    Hector::unitval carbon2(10, Hector::U_PGC);
+
+    Hector::unitval carbon3(20, Hector::U_PGC);
+    double arr[] = {1, 0, 0, 0};
+    CarbonTracker ct3 = ct1 - carbon2;
+
+    cout<< "Subtract Operator Test" << endl;
+    H_ASSERT(ct3.getTotalCarbon() == carbon3, "total carbon doesn't add right");
+    H_ASSERT(sameCTArrays(ct3.getOriginFracs(), arr), "Arrays don't add right");
+}
+
+void testWrongSubtraction(){
+    Hector::unitval carbon1(10, Hector::U_PGC);
+    CarbonTracker ct1(carbon1, CarbonTracker::SOIL);
+    Hector::unitval carbon2(30, Hector::U_PGC);
+
+    //Throws an error
+    CarbonTracker ct3 = ct1 - carbon2;
+
+}
+
 
 
 int main(int argc, char* argv[]){
@@ -90,5 +114,7 @@ int main(int argc, char* argv[]){
     testCopyConstructor();
     testAssignmentOperator();
     testAddOperator();
+    testSubtractOperator();
+    //testWrongSubtraction();
 }
 
