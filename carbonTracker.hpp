@@ -22,6 +22,8 @@ using namespace std;
       SOIL, ATMOSPHERE, DEEPOCEAN, TOPOCEAN, LAST
     };
 
+
+
    private:
     // Total amount of carbon in a pool represented by a CarbonTracker object - in petagrams carbon (U-PGC)
     Hector::unitval totalCarbon;
@@ -67,7 +69,7 @@ using namespace std;
 
 
     /**
-      * \brief subtraction between two CarbonTracker objects - if 'this' is ctracking, total carbon will be reduced and the map
+      * \brief subtraction between two CarbonTracker objects - if 'this' track == true, total carbon will be reduced and the map
       * will be updated to new proportions 
       * \param flux carbon tracker object that is being subtracted from 'this', needs total carbon unitval (unit pg C) and valid map
       * \return CarbonTracker object with decreased total carbon and upated map
@@ -113,21 +115,49 @@ using namespace std;
       */ 
     Hector::unitval getPoolCarbon(Pool origin);
 
+     /**
+      * \brief getter for static boolean track that shows if the carbon pools are tracking yet
+      * \return boolean value of track object
+      */ 
+    static bool isTracking();
+
     /**
       * \brief starts tracking and makes CarbonTracker param track = true
       */ 
-    static void startTracking(){
-        track = true;
-    }
-  };
+    static void startTracking();
 
-  /**
-    * \brief converts a unitval to a CarbonTracker object so that it can be added to a sub-pool of a CarbonTracker object
+      /**
+      * \brief stops tracking and makes CarbonTracker param track = false
+      */ 
+    static void stopTracking();
+
+    
+
+   /**
+    * \brief makes a flux of 'flux' carbon from a CarbonTracker object so that it can be added to a sub-pool of a CarbonTracker object
     * \param flux unitval with units (pg C)
-    * \param origin Array of carbon-pool from which the flux is coming from
     * \return CarbonTracker object with total carbon set to flux and a map that is the same as the pool the carbon is coming from
     */ 
-  CarbonTracker fluxToTracker(const Hector::unitval flux, CarbonTracker origin);
+  CarbonTracker fluxFromTrackerPool(const Hector::unitval flux);
+
+   /**
+    * \brief makes a flux of 'flux' carbon using the input array so that it can be added or subtracted from a sub-pool of a 
+    *        CarbonTracker object - usful for removing more of specific sub-pools than others (i.e. isotopes)
+    * \param fluxAmount unitval with units (pg C)
+    * \param fluxProportions double array that hold proportions that you want to add/remove subpools of carbon in
+    * \return CarbonTracker object with total carbon set to flux and a map that is the same fluxProportions
+    */ 
+  CarbonTracker fluxFromTrackerPool(const Hector::unitval fluxAmount, double* fluxProportions);
+  
+   /**
+    * \brief Prints the total amount of carbon within each subpool 
+    * \param out output stream 
+    * \param ct carbon tracker object that will be printed
+    * \return CarbonTracker object with total carbon set to flux and a map that is the same fluxProportions
+    */ 
+  friend ostream& operator<<(ostream &out, CarbonTracker &ct);
+  };
+
 
   //MIGHT WANT TO ADD ONE WHERE YOU CAN SET THE AMOUNT YOU TAKE FROM EACH?? INSTEAD OF IT COMING FROM EXACT SAME ARRAY AS ORIGIN
 
@@ -157,6 +187,4 @@ using namespace std;
     */ 
   CarbonTracker operator/(CarbonTracker&, const double);
 
-
-  ostream& operator<<(ostream &out, const CarbonTracker &x );
 #endif

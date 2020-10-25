@@ -5,10 +5,13 @@
 #include "unitval.hpp"
 
 using namespace std;
+bool CarbonTracker::track = false;
+string POOLNAMES[] = {"Soil", "Atmosphere", "Deep Ocean", "Top Ocean"};
 
 CarbonTracker::CarbonTracker(Hector::unitval totC, Pool subPool){
     H_ASSERT(subPool != CarbonTracker::LAST, "LAST is not a sub-pool of carbon, it is just a marker for the end of the enum")
     H_ASSERT(totC.units() == Hector::U_PGC, "Wrong Units. Carbin tracker only accepts U_PGC");
+    H_ASSERT(totC >= 0, "Pool cannont have a negative amount of carbon!");
     this->totalCarbon = totC;
     for(int i = 0; i< LAST; ++i){
         if(i == subPool){
@@ -23,13 +26,19 @@ CarbonTracker::CarbonTracker(Hector::unitval totC, Pool subPool){
 // // PRIVATE - ONLY FOR USE IN FLUX TO CARBON TRACKER FUNCTION
 CarbonTracker::CarbonTracker(Hector::unitval totC, double* poolFracs){
     H_ASSERT(totC.units() == Hector::U_PGC, "Wrong Units. Carbin tracker only accepts U_PGC");
+    H_ASSERT(totC >= 0, "Pool cannont have a negative amount of carbon!");
+    // TO DO: Add in asssert that all values in array are >= 0 and add to 1
     this->totalCarbon = totC;
     double counter = 0;
-        for(int i = 0; i< LAST; ++i){
-            this->originFracs[i] = *(poolFracs + i);
-            counter += *(poolFracs + i);
-        }
-    H_ASSERT(counter == 1, "Pool fractions don't add up to 1.")
+    for(int i = 0; i< LAST; ++i){
+        double frac = *(poolFracs + i);
+        this->originFracs[i] = frac;
+        H_ASSERT(frac>=0, "Can't have negative proportion of a carbon pool");
+        counter += frac;
+    }
+    if(track){
+        H_ASSERT(counter == 1, "Pool fractions don't add up to 1.");
+    }
 }
 
 // CarbonTracker::~CarbonTracker(){
@@ -55,24 +64,46 @@ CarbonTracker& CarbonTracker::operator=(CarbonTracker ct){
 CarbonTracker CarbonTracker::operator+(const CarbonTracker& flux){
     Hector::unitval totC = this->totalCarbon + flux.totalCarbon;
     double newOrigins[CarbonTracker::LAST];
-    for(int i = 0; i < CarbonTracker::LAST; ++i){
-        newOrigins[i] = (this->totalCarbon * this->originFracs[i] + 
+    if(!track){
+        double fluxAddedPoolCheck = 0; 
+        for(int i = 0; i < CarbonTracker::LAST; ++i){
+            newOrigins[i] = (totC * this->originFracs[i] + 
+                        totC * flux.originFracs[i]) / totC;
+            fluxAddedPoolCheck += (this->originFracs[i] + flux.originFracs[i]);
+        }
+        // fluxToTrackerPool makes the originFracs of a pool all 0 if it is not tracking so that it won't mess up
+        // the fractions of the pool the flux is added to - since tracking is off pool should only have 1 non-zero
+        // array element from the public constructor
+        H_ASSERT(fluxAddedPoolCheck == 1, "You can only add a flux to a pool, not a pool to a pool!")
+    }
+    else{
+        for(int i = 0; i < CarbonTracker::LAST; ++i){
+            newOrigins[i] = (this->totalCarbon * this->originFracs[i] + 
                         flux.totalCarbon * flux.originFracs[i]) / totC;
+        }
     }
     CarbonTracker addedFlux(totC, newOrigins);
     return addedFlux;
 }
 
+// USEFUL FOR WHEN YOU WANT TO MAKE ISOTOPES WORK...
+//TO DO: Add a flux to tracker that takes in an array or else this doesn't make too much sense
 CarbonTracker CarbonTracker::operator-(const CarbonTracker& flux){
     Hector::unitval totC = this->totalCarbon - flux.totalCarbon;
-    double newOrigins[CarbonTracker::LAST];
-    for(int i = 0; i < CarbonTracker::LAST; ++i){
-        Hector::unitval poolCarbon = this->totalCarbon * this->originFracs[i] - flux.totalCarbon * flux.originFracs[i];
-        H_ASSERT(poolCarbon >= 0, "Pool doesn't have enough carbon to subtract the whole flux - no negative carbon allowed");
-        newOrigins[i] = poolCarbon / totC;
+    if(!CarbonTracker::track){
+        return *this - flux.totalCarbon;
     }
-    CarbonTracker subtractFlux(totC, newOrigins);
-    return subtractFlux;
+    else{
+        double newOrigins[CarbonTracker::LAST];
+        for(int i = 0; i < CarbonTracker::LAST; ++i){
+            Hector::unitval poolCarbon = this->totalCarbon * this->originFracs[i] - flux.totalCarbon * flux.originFracs[i];
+            H_ASSERT(poolCarbon >= 0, "Pool doesn't have enough carbon to subtract the whole flux - no negative carbon allowed");
+            newOrigins[i] = poolCarbon / totC;
+        }
+        CarbonTracker subtractFlux(totC, newOrigins);
+        return subtractFlux;
+    }
+    
  }
 
  CarbonTracker CarbonTracker::operator-(const Hector::unitval flux){
@@ -103,6 +134,7 @@ CarbonTracker CarbonTracker::operator-(const CarbonTracker& flux){
 
  void CarbonTracker::setTotalCarbon(Hector::unitval tCarbon){
     H_ASSERT(tCarbon.units() == Hector::U_PGC, "Carbon Tracker only accepts unitvals with units U_PGC");
+    H_ASSERT(tCarbon >=0, "Cannot set total carbon to a negative number!");
     this->totalCarbon = tCarbon;
  }
 
@@ -125,17 +157,55 @@ Hector::unitval CarbonTracker::getPoolCarbon(Pool subPool){
     return this->originFracs[subPool] * this-> totalCarbon;
 }
 
-CarbonTracker fluxToTracker(const Hector::unitval flux, CarbonTracker origin){
-    H_ASSERT(flux.units() == Hector::U_PGC, "Flux must be in units U_PGC for carbon tracker");
-    H_ASSERT(origin.getTotalCarbon() >= flux, "You don't have enough carbon in the pool to take a flux of that size")
-    CarbonTracker ct(origin);
-    ct.setTotalCarbon(flux);
-    return ct;
-
+bool CarbonTracker::isTracking(){
+      return CarbonTracker::track;
 }
 
+void CarbonTracker::startTracking(){
+        CarbonTracker::track = true;
+}
 
-ostream& operator<<(ostream &out, const CarbonTracker &x ){
-    out << "hi";
+void CarbonTracker::stopTracking(){
+        CarbonTracker::track = false;
+}
+
+CarbonTracker CarbonTracker::fluxFromTrackerPool(const Hector::unitval flux){
+    // DOES THIS MAKE IT SEEM LIKE IT WILL SUBTRACT FOR YOU? BECAUSE IT DOESN'T
+    H_ASSERT(flux.units() == Hector::U_PGC, "Flux must be in units U_PGC for carbon tracker");
+    H_ASSERT(this->totalCarbon >= flux, "You don't have enough carbon in the pool to make a flux of that size");
+    CarbonTracker ct(*this);
+    ct.setTotalCarbon(flux);
+    if(!CarbonTracker::track){
+        for(int i = 0; i<CarbonTracker::LAST; ++i){
+            ct.originFracs[i] = 0;
+        }
+    }
+    return ct;
+}
+
+CarbonTracker CarbonTracker::fluxFromTrackerPool(const Hector::unitval fluxAmount, double* fluxProportions){
+    // DOES THIS MAKE IT SEEM LIKE IT WILL SUBTRACT FOR YOU? BECAUSE IT DOESN'T
+    H_ASSERT(fluxAmount.units() == Hector::U_PGC, "Flux must be in units U_PGC for carbon tracker");
+    // SHOULD PEOPLE BE ABLE TO CREATE FREE FLOATING FLUXES THAT ARE BIGGER THAN WERE THEY MIGHT TAKE THEM FROM??
+    // ARE THERE FLUXES W/OUT ARRAYS (I.E. JUST UNITVALS) THAT ARE INTERJECTED?
+    H_ASSERT(this->totalCarbon >= fluxAmount, "You don't have enough carbon in the pool to make a flux of that size");
+    double fluxFracs[CarbonTracker::LAST];
+    if(!track){
+        for(int i = 0; i<CarbonTracker::LAST; ++i){
+            fluxFracs[i] = 0;
+        }
+    }
+    else{
+        for(int i = 0; i<CarbonTracker::LAST; ++i){
+            fluxFracs[i] = fluxProportions[i];
+        }
+    }
+    return CarbonTracker(fluxAmount, fluxFracs);
+}
+
+ostream& operator<<(ostream &out, CarbonTracker &ct ){
+    for(int i = 0; i<CarbonTracker::LAST; ++i){
+        out << POOLNAMES[i]<<": "<< ct.getPoolCarbon((CarbonTracker::Pool)i)<<" "<<endl;
+    }
     return out;
 }
