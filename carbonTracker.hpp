@@ -25,6 +25,7 @@ using namespace std;
 
 
    private:
+
     // Total amount of carbon in a pool represented by a CarbonTracker object - in petagrams carbon (U-PGC)
     Hector::unitval totalCarbon;
 
@@ -36,7 +37,8 @@ using namespace std;
     static bool track;
 
     /**
-      *\brief parameterized constructor - useful for initializing fluxes with predetermined maps
+      *\brief parameterized constructor - useful for initializing fluxes with predetermined maps -
+              ONLY FOR USE WITHIN CPP NOT FOR GENERAL USE TO AVOID INITIALIZATION ISSUES
       *\param totalCarbon unitval (units pg C) that expresses total amount of carbon in the pool
       *\param origin_frax pointer to a double array - usually the originFracs array of the pool the flux is leaving
       * \return CarbonTracker object with totalCarbon set and an array set equal to the pointer object
@@ -46,31 +48,47 @@ using namespace std;
    public:
 
     /**
-      *\brief parameterized constructor - useful for initializing pools of carbon with only pg carbon (unitvals)
+      *\brief parameterized constructor - initialize pools of carbon with pg carbon (unitvals)
       *\param totalCarbon unitval (units pg C) that expresses total amount of carbon in the pool
       *\param key Pool object to set as inital origin of carbon in the pool at time of creation
-      * \return CarbonTracker object with totalCarbon set and an array of all zeros except for the the index of key (above in enum),
+      * \return CarbonTracker object with totalCarbon set and an array of all zeros except for the the index of key,
       *  which is set to 1
       */
     CarbonTracker(Hector::unitval totC, Pool subPool);
 
     // ~CarbonTracker(); DO I NEED THIS??
+
+
+    /**
+      * \brief copy constructor
+      * \param ct reference to carbon tracker to be copied
+      * \returns CarbonTracker object deep copied from ct created by copy constructor
+      */ 
     CarbonTracker(const CarbonTracker &ct);
+
+    /**
+      * \brief assignment operator
+      * \param ct carbon tracker to be copied
+      * \returns sets "this" instance variables to be the same as ct's
+      */ 
     CarbonTracker& operator=(CarbonTracker ct);
 
 
     /**
-      * \brief addition between two carbon tracker objects - if 'this' is carbon tracking, then total carbon is the sum
-      * of the two total carbons and the map of the new CarbonTracker object will reflect percentages of added pools
-      * \param flux carbon tracker object that is being added to 'this', needs total carbon unitval (unit pg C) and valid map
+      * \brief addition between two carbon tracker objects (one pool and one flux)
+      *         - if tracking, then total carbon is the sum of the two total carbons and the map of the new CarbonTracker 
+      *           object will reflect percentages of added pools
+      *         - else only the total carbon's will be added and the pool's array will be used (flux must be created using 
+      *           fluxFromTrackerPool and if not tracking array will be all 0s)
+      * \param flux carbon tracker object that is being added to 'this', needs total carbon unitval (unit pg C)
       * \returns CarbonTracker object with updated total carbon and map
       */ 
     CarbonTracker operator+(const CarbonTracker& flux);
 
 
     /**
-      * \brief subtraction between two CarbonTracker objects - if 'this' track == true, total carbon will be reduced and the map
-      * will be updated to new proportions 
+      * \brief subtraction between two CarbonTracker objects - if tracking, total carbon will be reduced and the map
+      *        will be updated to new proportions - else only total carbon is updated
       * \param flux carbon tracker object that is being subtracted from 'this', needs total carbon unitval (unit pg C) and valid map
       * \return CarbonTracker object with decreased total carbon and upated map
       */ 
