@@ -120,12 +120,22 @@ CarbonTracker CarbonTracker::operator-(const CarbonTracker& flux){
  CarbonTracker operator*(const double d, CarbonTracker& ct){
     CarbonTracker multipliedCT(ct);
     multipliedCT.setTotalCarbon(multipliedCT.getTotalCarbon() * d);
+    if(!CarbonTracker::track){
+        for(int i = 0; i<CarbonTracker::Pool::LAST; ++i){ 
+            multipliedCT.originFracs[i] = 0; // if we are not tracking we want flux arrays to be all 0s
+        }
+    }
     return multipliedCT;
  }
 
  CarbonTracker operator*(const CarbonTracker& ct, const double d){
     CarbonTracker multipliedCT(ct);
     multipliedCT.setTotalCarbon(multipliedCT.getTotalCarbon() * d);
+    if(!CarbonTracker::track){
+        for(int i = 0; i<CarbonTracker::Pool::LAST; ++i){
+            multipliedCT.originFracs[i] = 0; // if we are not tracking we want flux arrays to be all 0s
+        }
+    }
     return multipliedCT;
  }
 
@@ -133,6 +143,11 @@ CarbonTracker CarbonTracker::operator-(const CarbonTracker& flux){
     H_ASSERT(d != 0, "No dividing by 0!");
     CarbonTracker dividedCT(ct);
     dividedCT.setTotalCarbon(dividedCT.getTotalCarbon() / d);
+    if(!CarbonTracker::track){
+        for(int i = 0; i<CarbonTracker::Pool::LAST; ++i){
+            dividedCT.originFracs[i] = 0; // if we are not tracking we want flux arrays to be all 0s
+        }
+    }
     return dividedCT;
  }
 
@@ -213,8 +228,9 @@ CarbonTracker CarbonTracker::fluxFromTrackerPool(const Hector::unitval fluxAmoun
 }
 
 ostream& operator<<(ostream &out, CarbonTracker &ct ){
+    cout<<"Total Carbon: "<< ct.getTotalCarbon()<<endl;
     for(int i = 0; i<CarbonTracker::LAST; ++i){
-        out << POOLNAMES[i]<<": "<< ct.getPoolCarbon((CarbonTracker::Pool)i)<<" "<<endl;
+       cout << POOLNAMES[i]<<": "<< ct.getPoolCarbon((CarbonTracker::Pool)i)<<endl;
     }
     return out;
 }

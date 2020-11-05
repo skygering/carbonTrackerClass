@@ -1,4 +1,5 @@
 #include "carbonTracker.hpp"
+#include "carbonCycleSim.hpp"
 #include <iostream>     
 #include <cassert> 
 
@@ -337,32 +338,33 @@ void testPrint(){
 
 int main(int argc, char* argv[]){
     cout << "Time for Tests!" << endl;
-    testTrackerStartsFalse();
-    testIsTrackingAndStartTracking();
-    testCorrectConstructor();
+    // testTrackerStartsFalse();
+    // testIsTrackingAndStartTracking();
+    // testCorrectConstructor();
     //testWrongConstructor();
     //testNegCarbonConstructor();
-    testCopyConstructor();
-    testAssignmentOperator();
-    testAddOperator();
+    // testCopyConstructor();
+    // testAssignmentOperator();
+    // testAddOperator();
     //testFrozenPoolAddPool();
-    testUnitValSubtractOperator();
+    // testUnitValSubtractOperator();
     //testWrongSubtraction();
-    testSubtractionWithArray();
-    testMultiplication();
-    testDivision();
+    // testSubtractionWithArray();
+    // testMultiplication();
+    // testDivision();
     //testDivisionBy0();
-    testSetCarbon();
+    // testSetCarbon();
     //testWrongSetCarbon();
     //negativeSetCarbon();
-    testGetTotalCarbon();
-    testGetOriginFracs();
-    testGetPoolCarbon();
-    testFluxFromTrackerPool();
-    testFluxFromTrackerPoolWithArray();
+    // testGetTotalCarbon();
+    // testGetOriginFracs();
+    // testGetPoolCarbon();
+    // testFluxFromTrackerPool();
+    // testFluxFromTrackerPoolWithArray();
     //testWrongFluxFromTrackerPoolSize();
     //testWrongFluxFromTrackerPoolUnits();
-    testPrint();
+    // testPrint();
+    carbonCycleSimBasic();
 
     }
 

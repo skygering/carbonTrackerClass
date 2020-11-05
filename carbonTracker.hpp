@@ -22,6 +22,8 @@ using namespace std;
       SOIL, ATMOSPHERE, DEEPOCEAN, TOPOCEAN, LAST
     };
 
+   static const string POOLNAMES[CarbonTracker::Pool::LAST];
+
 
 
    private:
@@ -166,43 +168,42 @@ using namespace std;
     * \return CarbonTracker object with total carbon set to flux and a map that is the same fluxProportions
     */ 
   CarbonTracker fluxFromTrackerPool(const Hector::unitval fluxAmount, double* fluxProportions);
-  
-   /**
-    * \brief Prints the total amount of carbon within each subpool 
-    * \param out output stream 
-    * \param ct carbon tracker object that will be printed
-    * \return CarbonTracker object with total carbon set to flux and a map that is the same fluxProportions
-    */ 
-  friend ostream& operator<<(ostream &out, CarbonTracker &ct);
-  };
 
-
-  //MIGHT WANT TO ADD ONE WHERE YOU CAN SET THE AMOUNT YOU TAKE FROM EACH?? INSTEAD OF IT COMING FROM EXACT SAME ARRAY AS ORIGIN
 
   /**
     * \brief multiplication between double and CarbonTracker object - usually used to get fraction of a pool
     * \param d double (usually a fractional value to get sub-section of pool)
     * \param ct CarbonTracker object with unitval (pg C) total carbon and valid map
-    * \return CarbonTracker object with d*(ct totalCarbon) and unchanged map 
+    * \return CarbonTracker object with d*(ct totalCarbon) and unchanged map unless not tracking then map is all 0s
     */ 
-  CarbonTracker operator*(const double d, CarbonTracker& ct);
+  friend CarbonTracker operator*(const double d, CarbonTracker& ct);
 
   /**
     * \brief multiplication between CarbonTracker object and double - usually used 
     * opposite order of paramters from above
     * \param d double (usually a fractional value to get sub-section of pool)
     * \param ct CarbonTracker object with unitval (pg C) total carbon and valid map
-    * \return CarbonTracker object with d*(ct totalCarbon) and unchanged map 
+    * \return CarbonTracker object with d*(ct totalCarbon) and unchanged map unless not tracking then map is all 0s
     */ 
-  CarbonTracker operator*(const CarbonTracker& ct, double d);
+  friend CarbonTracker operator*(const CarbonTracker& ct, double d);
 
   /**
     * \brief divison of a CarbonTracker object by a double - usually used to get fraction of a pool
     * opposite order of paramters from above - implemnted to make sure unitval operations are still allowed
     * \param d double (usually a fractional value to get sub-section of pool)
     * \param ct CarbonTracker object with unitval (pg C) total carbon and valid map
-    * \return CarbonTracker object with (ct totalCarbon)/d and unchanged map 
+    * \return CarbonTracker object with (ct totalCarbon)/d and unchanged map unless not tracking then map is all 0s
     */ 
-  CarbonTracker operator/(CarbonTracker&, const double);
+  friend CarbonTracker operator/(CarbonTracker&, const double);
+
+     /**
+    * \brief Prints the total amount of carbon within each subpool 
+    * \param out output stream 
+    * \param ct carbon tracker object that will be printed
+    * \return CarbonTracker object with total carbon set to flux and a map that is the same fluxProportions
+    */ 
+  friend ostream& operator<<(ostream &out, CarbonTracker &ct);
+
+ };
 
 #endif
