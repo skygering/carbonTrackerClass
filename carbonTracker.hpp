@@ -22,7 +22,7 @@ using namespace std;
       SOIL, ATMOSPHERE, DEEPOCEAN, TOPOCEAN, LAST
     };
 
-   static const string POOLNAMES[CarbonTracker::Pool::LAST];
+    static const string POOLNAMES[CarbonTracker::Pool::LAST];
 
 
 
@@ -57,8 +57,6 @@ using namespace std;
       *  which is set to 1
       */
     CarbonTracker(Hector::unitval totC, Pool subPool);
-
-    // ~CarbonTracker(); DO I NEED THIS??
 
 
     /**
@@ -110,11 +108,6 @@ using namespace std;
       */ 
     void setTotalCarbon(Hector::unitval totalCarbon);
 
-    // /**
-    //   * \brief setter for map object within CarbonTracker object
-    //   * \param origin_frac map with MultiKeys key and double values
-    //   */ 
-    // void setOriginFracs(double* origin_frac);
 
     /**
       * \brief getter for CarbonTracker total carbon

@@ -35,15 +35,8 @@ CarbonTracker::CarbonTracker(Hector::unitval totC, double* poolFracs){
         //H_ASSERT(frac>=0, "Can't have negative proportion of a carbon pool");
         counter += frac;
     }
-    if(track){
-        H_ASSERT(counter == 1, "Pool fractions don't add up to 1.");
-    }
 }
 
-// CarbonTracker::~CarbonTracker(){
-//     delete[] originFracs;
-//     //delete totalCarbon; Does this not work bc unitval doesn't have a constructor? Do I need this?
-// }
 
 CarbonTracker::CarbonTracker(const CarbonTracker &ct){
     this->totalCarbon = ct.totalCarbon;
@@ -157,12 +150,6 @@ CarbonTracker CarbonTracker::operator-(const CarbonTracker& flux){
     this->totalCarbon = tCarbon;
  }
 
-//  void CarbonTracker::setOriginFracs(double* poolFracs){
-//      for(int i = 0; i< LAST; ++i){
-//         this->originFracs[i] = *(poolFracs + i);
-//     }
-//  }
-
  Hector::unitval CarbonTracker::getTotalCarbon(){
      return this->totalCarbon;
  }
@@ -189,7 +176,6 @@ void CarbonTracker::stopTracking(){
 }
 
 CarbonTracker CarbonTracker::fluxFromTrackerPool(const Hector::unitval flux){
-    // DOES THIS MAKE IT SEEM LIKE IT WILL SUBTRACT FOR YOU? BECAUSE IT DOESN'T
     H_ASSERT(flux.units() == Hector::U_PGC, "Flux must be in units U_PGC for carbon tracker");
     //H_ASSERT(this->totalCarbon >= flux, "You don't have enough carbon in the pool to make a flux of that size");
     CarbonTracker ct(*this);
@@ -207,10 +193,7 @@ CarbonTracker CarbonTracker::fluxFromTrackerPool(const Hector::unitval flux){
 // USEFUL FOR WHEN YOU WANT TO MAKE A CUSTOM FLUX WITH DIFFERENT POOLS OF CARBON BEING PULLED FROM MORE THAN OTHERS
 // This will be usful for isotopes but not for general use
 CarbonTracker CarbonTracker::fluxFromTrackerPool(const Hector::unitval fluxAmount, double* fluxProportions){
-    // DOES THIS MAKE IT SEEM LIKE IT WILL SUBTRACT FOR YOU? BECAUSE IT DOESN'T
     H_ASSERT(fluxAmount.units() == Hector::U_PGC, "Flux must be in units U_PGC for carbon tracker");
-    // SHOULD PEOPLE BE ABLE TO CREATE FREE FLOATING FLUXES THAT ARE BIGGER THAN WERE THEY MIGHT TAKE THEM FROM??
-    // ARE THERE FLUXES W/OUT ARRAYS (I.E. JUST UNITVALS) THAT ARE INTERJECTED?
     //H_ASSERT(this->totalCarbon >= fluxAmount, "You don't have enough carbon in the pool to make a flux of that size");
     double fluxFracs[CarbonTracker::LAST];
     if(!track){
@@ -219,10 +202,13 @@ CarbonTracker CarbonTracker::fluxFromTrackerPool(const Hector::unitval fluxAmoun
             // if not tracking then the array is all 0s because the flux should not change original arrays
         }
     }
-    else{
+    else{ 
+        double fracTotal = 0;
         for(int i = 0; i<CarbonTracker::LAST; ++i){
             fluxFracs[i] = fluxProportions[i];
+            fracTotal = fracTotal + fluxFracs[i];
         }
+        H_ASSERT(fracTotal == 1, "You must enter in proporations of carbon that add to 1");
     }
     return CarbonTracker(fluxAmount, fluxFracs);
 }

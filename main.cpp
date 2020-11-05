@@ -40,17 +40,17 @@ void testCorrectConstructor(){
     H_ASSERT(correctArray, "Wrong Carbon Fraction Array Simple Constructor")
 }
 
-void testWrongConstructor(){
+void testWrongConstructorUnits(){
     cout<<"Error Simple Parameterized Array Tests"<<endl;
     Hector::unitval carbon(10, Hector::U_UNITLESS);
     CarbonTracker soil1(carbon, CarbonTracker::SOIL);
 }
 
-void testNegCarbonConstructor(){
-    cout<<"Error Simple Parameterized Array Tests"<<endl;
-    Hector::unitval carbon(-10, Hector::U_PGC);
-    CarbonTracker soil1(carbon, CarbonTracker::SOIL);
-}
+// void testNegCarbonConstructor(){
+//     cout<<"Error Simple Parameterized Array Tests"<<endl;
+//     Hector::unitval carbon(-10, Hector::U_PGC);
+//     CarbonTracker soil1(carbon, CarbonTracker::SOIL);
+// }
 
 void testCopyConstructor(){
     Hector::unitval carbon10(10, Hector::U_PGC);
@@ -132,14 +132,14 @@ void testUnitValSubtractOperator(){
     H_ASSERT(sameCTArrays(testCT.getOriginFracs(), arr), "Arrays don't add right");
 }
 
-void testWrongSubtraction(){
-    Hector::unitval carbon10(10, Hector::U_PGC);
-    CarbonTracker soil(carbon10, CarbonTracker::SOIL);
-    Hector::unitval carbon30(30, Hector::U_PGC);
+// void testWrongSubtraction(){
+//     Hector::unitval carbon10(10, Hector::U_PGC);
+//     CarbonTracker soil(carbon10, CarbonTracker::SOIL);
+//     Hector::unitval carbon30(30, Hector::U_PGC);
 
-    //Throws an error
-    CarbonTracker testCT = soil - carbon30;
-}
+//     //Throws an error
+//     CarbonTracker testCT = soil - carbon30;
+// }
 
 void testSubtractionWithArray(){
     CarbonTracker::startTracking();
@@ -171,28 +171,48 @@ void testMultiplication(){
     Hector::unitval carbon10(10, Hector::U_PGC);
     CarbonTracker soil10(carbon10, CarbonTracker::SOIL);
     double arr1[] = {1, 0, 0, 0};
+    double arrZero[] = {0,0,0,0};
 
+    CarbonTracker soil1 = soil10*0.1;
+    H_ASSERT(soil1.getTotalCarbon() == 1, "multiplication ct*double doesn't work when not tracking");
+    H_ASSERT(sameCTArrays(soil1.getOriginFracs(), arrZero), "multiplication messes up arrays for ct*double when not tracking"); 
+
+    CarbonTracker soil50 = 5*soil10;
+    H_ASSERT(soil50.getTotalCarbon() == 50, "multiplication double*ct doesn't work when not tracking");
+    H_ASSERT(sameCTArrays(soil50.getOriginFracs(), arrZero), "multiplication messes up arrays for double*ct when not tracking"); 
+
+    CarbonTracker::startTracking();
     CarbonTracker soil5 = soil10 * 0.5;
     CarbonTracker soil20 = 2 * soil10;
 
     cout<< "Multiplication Operator Test" << endl;
     H_ASSERT(soil5.getTotalCarbon() == 5, "multiplication ct*double doesn't work");
-    H_ASSERT(sameCTArrays(soil5.getOriginFracs(), arr1), "multiplication messes up arrays for ct*double");
+    H_ASSERT(sameCTArrays(soil5.getOriginFracs(), arr1), "multiplication messes up arrays for ct*double"); 
     H_ASSERT(soil20.getTotalCarbon() == 20, "multiplication double*ct doesn't work");
-    H_ASSERT(sameCTArrays(soil20.getOriginFracs(), arr1), "multiplication messes up arrays for ct*double");
+    H_ASSERT(sameCTArrays(soil20.getOriginFracs(), arr1), "multiplication messes up arrays for double*ct");
+    CarbonTracker::stopTracking();
 }
 
 void testDivision(){
+    cout<< "Division Operator Test" << endl;
     Hector::unitval carbon10(10, Hector::U_PGC);
     CarbonTracker soil10(carbon10, CarbonTracker::SOIL);
     double arr1[] = {1, 0, 0, 0};
+    double arrZero[] = {0,0,0,0};
 
+    CarbonTracker soil1 = soil10/10;
+    H_ASSERT(soil1.getTotalCarbon() == 1, "Division ct/double doesn't work when not tracking");
+    H_ASSERT(sameCTArrays(soil1.getOriginFracs(), arrZero), "division messes up arrays for ct/double when no tracking"); 
+
+    CarbonTracker::startTracking();
     CarbonTracker soil5 = soil10/2;
 
-    cout<< "Division Operator Test" << endl;
-    H_ASSERT(soil5.getTotalCarbon() == 5, "multiplication ct*double doesn't work");
-    H_ASSERT(sameCTArrays(soil5.getOriginFracs(), arr1), "multiplication messes up arrays for ct*double");
+    
+    H_ASSERT(soil5.getTotalCarbon() == 5, "division ct/double doesn't work when tracking");
+    H_ASSERT(sameCTArrays(soil5.getOriginFracs(), arr1), "division messes up arrays for ct/double when tracking");
+    CarbonTracker::stopTracking();
 }
+
 void testDivisionBy0(){
     Hector::unitval carbon10(10, Hector::U_PGC);
     CarbonTracker soil10(carbon10, CarbonTracker::SOIL);
@@ -210,7 +230,7 @@ void testSetCarbon(){
     H_ASSERT(sameCTArrays(soil10.getOriginFracs(), arr1), "setTotalCarbon changes the array");
 }
 
-void testWrongSetCarbon(){
+void testWrongSetCarbonUnits(){
     Hector::unitval year10(10, Hector::U_YRS);
     Hector::unitval carbon10(10, Hector::U_PGC);
     CarbonTracker soil10(carbon10, CarbonTracker::SOIL);
@@ -282,12 +302,12 @@ void testFluxFromTrackerPool(){
     CarbonTracker::stopTracking();
 }
 
-void testWrongFluxFromTrackerPoolSize(){ 
-    Hector::unitval carbon5(5, Hector::U_PGC);
-    Hector::unitval carbon10(10, Hector::U_PGC);
-    CarbonTracker soil5(carbon5, CarbonTracker::SOIL);
-    CarbonTracker flux10 = soil5.fluxFromTrackerPool(carbon10);
-}
+// void testWrongFluxFromTrackerPoolSize(){ 
+//     Hector::unitval carbon5(5, Hector::U_PGC);
+//     Hector::unitval carbon10(10, Hector::U_PGC);
+//     CarbonTracker soil5(carbon5, CarbonTracker::SOIL);
+//     CarbonTracker flux10 = soil5.fluxFromTrackerPool(carbon10);
+// }
 
 void testWrongFluxFromTrackerPoolUnits(){ 
     Hector::unitval carbon5(5, Hector::U_PGC);
@@ -341,30 +361,29 @@ int main(int argc, char* argv[]){
     // testTrackerStartsFalse();
     // testIsTrackingAndStartTracking();
     // testCorrectConstructor();
-    //testWrongConstructor();
-    //testNegCarbonConstructor();
+    //testWrongConstructorUnits();
     // testCopyConstructor();
     // testAssignmentOperator();
     // testAddOperator();
     //testFrozenPoolAddPool();
     // testUnitValSubtractOperator();
-    //testWrongSubtraction();
     // testSubtractionWithArray();
     // testMultiplication();
     // testDivision();
     //testDivisionBy0();
     // testSetCarbon();
-    //testWrongSetCarbon();
-    //negativeSetCarbon();
+    //testWrongSetCarbonUnits();
     // testGetTotalCarbon();
     // testGetOriginFracs();
     // testGetPoolCarbon();
     // testFluxFromTrackerPool();
     // testFluxFromTrackerPoolWithArray();
-    //testWrongFluxFromTrackerPoolSize();
     //testWrongFluxFromTrackerPoolUnits();
     // testPrint();
+
     carbonCycleSimBasic();
+    carbonCycleSimLoops();
+    //carbonCycleSimFun();
 
     }
 
