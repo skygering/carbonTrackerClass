@@ -16,6 +16,7 @@ class TrackedVal {
 
 public:
     // public constructor (see private one below)
+    TrackedVal();
     TrackedVal(Hector::unitval total, string pool);
     
     // math operations
@@ -26,19 +27,26 @@ public:
     bool operator==(const TrackedVal& rhs);
     bool operator!=(const TrackedVal& rhs);
 
-    // TEMPORARY UNTIL ALL POOLS ARE CONVERTED
-    TrackedVal operator+(const Hector::unitval flux);
-
     bool identical(TrackedVal x) const;  // I don't know if this is needed or not
 
     // accessor functions
     vector<string> get_sources() const;
-    double get_fraction(std::string source) const;
+    double get_fraction(string source) const;
     Hector::unitval get_total() const;
+
+    // setter functions
+    void set(Hector::unitval val);
+    void set( double val, Hector::unit_types units, string pool);
 
     // tracking
     bool isTracking() const;
     void setTracking(bool do_track);
+
+    // make flux for pool addition
+    TrackedVal flux_from_pool(const Hector::unitval fluxVal) const;
+
+    // adjust pool size to match output from ODE solver
+    TrackedVal adjust_pool(const Hector::unitval solvedSize);
 
     // pretty printing
     friend ostream& operator<<(ostream &out, TrackedVal &ct);

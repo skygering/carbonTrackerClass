@@ -6,7 +6,12 @@
 
 using namespace std;
 
-// Public constructor
+// Public constructors
+TrackedVal::TrackedVal(){
+    track = false;
+    Hector::unitval total_val(0, Hector::U_UNITLESS);
+}
+
 TrackedVal::TrackedVal(Hector::unitval total, string pool){
     track = false;
     this->total = total;
@@ -62,6 +67,19 @@ double TrackedVal::get_fraction(string source) const {
     return val;
 }
 
+// Setter: set the total value and units; the map only has the pool named below with frac 1
+void TrackedVal::set( double val, Hector::unit_types units, string pool){
+    Hector::unitval total_val(val, units);
+    this->total = total_val;
+    ctmap[pool] = 1;
+}
+
+// Setter: use to set pool total - use sparingly because doesn't change map
+void TrackedVal::set(Hector::unitval val){
+    this->total = val;
+}
+
+
 // Addition: the complicated one
 TrackedVal TrackedVal::operator+(const TrackedVal& flux){
     Hector::unitval new_total = total + flux.total;
@@ -100,38 +118,6 @@ TrackedVal TrackedVal::operator+(const TrackedVal& flux){
     TrackedVal added_flux(new_total, new_origins, track);
     return added_flux;
 }
-
-// TEMPORARY: needed until all pools are converted in TrackedVal objects
-TrackedVal TrackedVal::operator+(const Hector::unitval flux){
-    Hector::unitval new_total = total + flux;
-    unordered_map<string, double> new_origins;
-
-    if(track){
-        string not_tracked("not tracked");
-        unordered_map<string, Hector::unitval> new_pools;
-        if(ctmap.find(not_tracked) == ctmap.end()){
-            new_pools[not_tracked] = flux;
-        }
-        for (auto itr = ctmap.begin(); itr != ctmap.end(); itr++) {
-            if(itr->first == not_tracked){
-                new_pools[itr->first] = itr->second*total + flux;
-            }
-            else{
-                new_pools[itr->first] = itr->second*total;
-            }
-        }
-        for (auto itr = new_pools.begin(); itr != new_pools.end(); itr++) {
-            if(new_total) {
-                new_origins[itr->first] = itr->second / new_total;
-            } else {  // uh oh, new total is zero
-                new_origins[itr->first] = 1 / new_pools.size();
-            }
-        }
-    }
-    TrackedVal added_flux(new_total, new_origins, track);
-    return added_flux;
-}
-
 
 // Because we track a total and source fractions, subtraction is trivial
 TrackedVal TrackedVal::operator-(const Hector::unitval flux){
@@ -181,6 +167,33 @@ bool TrackedVal::identical(TrackedVal x) const {
     }
 
     return same;
+}
+
+// Creates a flux from a pool so the flux can be added to other pools
+TrackedVal TrackedVal::flux_from_pool(Hector::unitval fluxVal) const{
+    TrackedVal flux(fluxVal, ctmap, track);
+    return flux;
+}
+
+// Adjusts pool size to match that output by the ODE solver
+TrackedVal TrackedVal::adjust_pool(const Hector::unitval solvedSize){
+    TrackedVal adjusted(total, ctmap, track);
+    Hector::unitval untracked = solvedSize - total;
+    if(track) {
+        if(untracked > 0){
+            TrackedVal flux(untracked, "not tracked");
+            flux.setTracking(true);
+            adjusted = adjusted + flux;
+        }
+        else{
+            untracked = -untracked; // need positive val to subtract
+            adjusted = adjusted - untracked;
+        }
+    }
+    else{
+        adjusted.set(solvedSize);
+    }
+    return adjusted;
 }
 
 // Printing

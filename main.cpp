@@ -14,6 +14,11 @@ H_ASSERT(thrown, msg); \
 
 void test_creation() {
     cout << "test_creation" << endl;
+    Hector::unitval c0(0, Hector::U_PGC);
+    TrackedVal y;
+    H_ASSERT(y.get_total() == Hector::unitval(), "Total isn't a unitval");
+    H_ASSERT(y.get_total() == c0, "Total amount isn't right")
+    H_ASSERT(!y.isTracking(), "Tracker doesn't start off false");
     TrackedVal x(Hector::unitval(), "x");
     H_ASSERT(!x.isTracking(), "Tracker doesn't start off false");
     H_ASSERT(x.get_total() == Hector::unitval(), "Total isn't unitval");
@@ -111,38 +116,6 @@ void test_addition(){
     // add 0 and 0
     TrackedVal zerozero = zero + zero;
     H_ASSERT(zerozero == zero, "adding zeros doesn't work");
-
-    // add after turning tracking off - I don't think that this scenario really matters
-    // y.setTracking(false);
-    // x.setTracking(false);
-    // cout<<y<<endl;
-    // y = y + x; // now has a value of c2
-    // y.setTracking(true);
-    // x.setTracking(true);
-    // cout<<"y: " << y << "y pools:" << y.get_fraction("y") <<endl;
-    // H_ASSERT(y.get_total() == c2, "adding after turning tracking off doesn't work");
-    // H_ASSERT(y.get_fraction("y") == 1, "z total not right (tracked off/on)");
-    // H_ASSERT(y.get_fraction("x") == 0, "x total not right (tracked off/on)");
-
-    // temp addition without tracking
-    x.setTracking(false);
-    Hector::unitval c3(3, Hector::U_PGC);
-    TrackedVal w = x + c3;
-    H_ASSERT(w.get_total() == c1 + c3, "temp untracked total not right");
-
-    //temp addition with tracking
-    x.setTracking(true);
-    w = x + c3;
-    H_ASSERT(w.get_total() == c1 + c3, "temp tracked total not right");
-    H_ASSERT(w.get_fraction("x") == 0.25, "w fraction not right");
-    H_ASSERT(w.get_fraction("not tracked") == 0.75, "w fraction not right");
-
-    //temp addition add 0
-    TrackedVal w2 = w + c0;
-    H_ASSERT(w2 == w, "temp adding zero doesn't work");
-    H_ASSERT(w2.get_fraction("not tracked") == 0.75, "w2 fraction not right");
-    H_ASSERT(w2.get_fraction("x") == 0.25, "w2 fraction not right");
-
 }
 
 void test_subtraction(){
@@ -186,7 +159,20 @@ void test_mult_div(){
     H_ASSERT(x0.get_total() == c0, "multiplication by zero doesn't work");
     x0 = x / 0;
     H_ASSERT(isinf(x0.get_total()), "division by zero doesn't work");
-    
+}
+
+void test_setters(){
+    cout << "test_setters" << endl;
+    TrackedVal x(Hector::unitval(), "x");
+    Hector::unitval c2(2, Hector::U_PGC);
+    x.setTracking(true);
+    x.set(c2);
+    H_ASSERT(x.get_total() == c2, "setter for total doesn't work");
+    H_ASSERT(x.get_fraction("x") == 1, "value setter doesn't change map");
+
+    x.set(3, Hector::U_PGC_YR, "y");
+    H_ASSERT(x.get_total() == Hector::unitval(3, Hector::U_PGC_YR), "setter doesn't set value and units");
+    H_ASSERT(x.get_fraction("y") == 1, "setter doesn't reset map");
 }
 
 void test_equality(){
@@ -232,6 +218,48 @@ void test_identicality(){
     x0.setTracking(true);
     H_ASSERT(!x.identical(x0), "identical fractions doesn't work");
     H_ASSERT(!x0.identical(x), "identical fractions doesn't work");
+}
+
+void test_flux_from_pool(){
+    cout << "test_flux_from_pool" << endl;
+    Hector::unitval c10(10, Hector::U_PGC);
+    Hector::unitval c5(5, Hector::U_PGC);
+    TrackedVal x(c10, "x");
+    x.setTracking(true);
+    TrackedVal flux5 = x.flux_from_pool(c5);
+    H_ASSERT(flux5.get_total() == c5, "correct flux amount");
+    H_ASSERT(flux5.get_sources() == x.get_sources(), "map stays the same in flux");
+    H_ASSERT(flux5.isTracking() == x.isTracking(), "tracking for flux is not the same as pool");
+}
+
+void test_adjust_pool(){
+    cout<<"test_adjust_pool"<<endl;
+    Hector::unitval c10(10, Hector::U_PGC);
+    Hector::unitval c5(5, Hector::U_PGC);
+    TrackedVal pool(c5, "pool");
+    // not tracking adjust
+    pool = pool.adjust_pool(c10);
+    H_ASSERT(pool.get_total() == c10, "doesn't adjust total");
+    H_ASSERT(!pool.isTracking(), "tracking is changed when adjusting");
+    pool.setTracking(true);
+    H_ASSERT(pool.get_fraction("pool") == 1, "when not tracking, map is changed");
+
+    // tracking adjust when actual > current
+    Hector::unitval c15 = c10 + c5;
+    pool = pool.adjust_pool(c15);
+    H_ASSERT(pool.get_total() == c15, "doesn't adjust total");
+    H_ASSERT(pool.isTracking(), "tracking is changed when adjusting");
+    // unexplained flux is from pool 'not tracked'
+    H_ASSERT(pool.get_fraction("pool") == (c10/c15), "when not tracking, map is changed");
+    H_ASSERT(pool.get_fraction("not tracked") == (c5/c15), "when not tracking, map is changed");
+
+    // tracking adjust when actual < current
+    pool = pool.adjust_pool(c10);
+    H_ASSERT(pool.get_total() == c10, "doesn't adjust total");
+    H_ASSERT(pool.isTracking(), "tracking is changed when adjusting");
+    // map shouldn't change
+    H_ASSERT(pool.get_fraction("pool") == (c10/c15), "when not tracking, map is changed");
+    H_ASSERT(pool.get_fraction("not tracked") == (c5/c15), "when not tracking, map is changed");
 }
 
 int main(int argc, char* argv[]){
@@ -298,9 +326,12 @@ int main(int argc, char* argv[]){
     test_get_sources();
     test_get_total();
     test_get_fraction();
+    test_setters();
     test_addition();
     test_subtraction();
     test_mult_div();
     test_equality();
     test_identicality();
+    test_flux_from_pool();
+    test_adjust_pool();
 }
